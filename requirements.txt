@@ -1,0 +1,3 @@
+bardapi
+streamlit
+streamlit_chat
