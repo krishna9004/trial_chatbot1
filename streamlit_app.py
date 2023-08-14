@@ -1,30 +1,53 @@
-from bardapi import Bard 
-import streamlit as st 
+from bardapi import Bard
+import streamlit as st
 from streamlit_chat import message
-import os 
+import os
 
+# Extract the Bard API key from your browser's local storage
+# Replace 'your_bard_api_key_here' with the actual Bard API key
+# If you already have the key set as an environment variable, you can skip this step
 os.environ["_BARD_API_KEY"] = "Zgh_FEkwHdIc9JrbI9Beo32MSUGGzHKIBhgUPP73tMj1TcJn4mKuhOfFzZaUwIL4nDpghw."
 
+# Function to get the response from the Bard API based on the user's input prompt
 def response_api(prompt):
-    message = Bard().get_answer(str(prompt))['content']
-    return message
+    try:
+        # Use the Bard API to get the answer based on the user's prompt
+        response = Bard().get_answer(str(prompt))
+        # Extract the content from the response
+        message_content = response['content']
+        return message_content
+    except Exception as e:
+        # Print the full exception traceback for debugging purposes
+        import traceback
+        traceback.print_exc()
+        return "Error: Unable to get response from Bard API."
 
+# Function to get user input using a Streamlit text input widget
 def user_input():
-    return st.text_input("enter your prompt:")
+    # Create a text input field for the user to enter their prompt
+    input_text = st.text_input("Enter your prompt:")
+    return input_text
 
+# Initialize session_state to store past inputs and generated outputs
 if 'generate' not in st.session_state:
     st.session_state['generate'] = []
+
 if 'past' not in st.session_state:
     st.session_state['past'] = []
 
+# Get user input
 user_text = user_input()
 
+# If the user enters a prompt, get the response using the Bard API and store the input and output in session_state
 if user_text:
     output = response_api(user_text)
     st.session_state.generate.append(output)
     st.session_state.past.append(user_text)
 
+# Display the chat history (past inputs and generated outputs) in reverse order
 if st.session_state['generate']:
-    for i, (past_text, generated_text) in enumerate(reversed(zip(st.session_state['past'], st.session_state['generate']))):
-        message(past_text, is_user=True, key=f"{i}_user")
-        message(generated_text, key=str(i))
+    for i in range(len(st.session_state['generate']) - 1, -1, -1):
+        # Display past user input with 'is_user=True' to indicate that it's the user's message
+        message(st.session_state["past"][i], is_user=True, key=str(i) + '_user')
+        # Display the generated response
+        message(st.session_state["generate"][i], key=str(i))
